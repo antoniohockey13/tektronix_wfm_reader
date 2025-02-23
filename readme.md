@@ -1,13 +1,15 @@
-Software for Tektronic Oscilloscope
-===================================
+# Software for Tektronix Oscilloscope (Updated Feb 2025)
 
-wfmread.py: Read binary wfm003 files for data analysis
-- has the option to write to npz
+**Feb 2025:** Updated to read `.wfm` files from the **5 Series B MSO Mixed Signal Oscilloscope**.
 
-To write to an npz file:
+## Files
+### `wfmread.py`: Read binary `wfm003` files for data analysis
+- has the option to write to an `.npz` file
+
+#### To write to an `.npz` file:
 
 $ python wfmread.py file.wfm  
-This will output a new file called file.npz  
+This will output a new file called `file.npz`  
 This file can be read in through python and plotted with matplotlib as so:  
 
 $ python  
@@ -25,4 +27,8 @@ $ python
 >>> plt.show()
 ```
 
-time_resolution.ipynb: Example analysis code using wfmread
+### `time_resolution.ipynb`: Example analysis code using `wfmread.py`
+
+## Credits
+- Partially based on MATLAB code [`wfm_ascii_dpo.m`](https://www.mathworks.com/matlabcentral/fileexchange/14918-tektronix-wfm-file-reader) by Randy White (2007).
+- [Tektronix Waveform File Format Manual 077-0220-11](https://download.tek.com/manual/Waveform-File-Format-Manual-077022011.pdf)
