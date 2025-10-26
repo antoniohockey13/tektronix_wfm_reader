@@ -4,7 +4,8 @@
 import sys
 import struct as st
 import numpy as np
-
+import os 
+import ROOT
 class wfmread:
     '''
     Reads the .wfm binary structure for analysis without saving to large files
@@ -152,6 +153,32 @@ class wfmread:
     def write_to_npz(self):
         out_name = self.name.rstrip('.wfm')
         np.savez(out_name, voltage=self.data, timescale=self.time)
+
+    def write_to_root(self):
+        """
+        Write waveform data to a ROOT file.
+        The output ROOT file will have the same name as the input .wfm file but with a .root extension.
+        """
+        out_name = self.name.rstrip('.wfm') + '.root'
+        f = ROOT.TFile(out_name, "RECREATE")
+        t = ROOT.TTree("waveform", "Tektronix waveform data")
+
+        voltage = ROOT.std.vector('double')()
+        time = ROOT.std.vector('double')()
+
+        t.Branch("voltage", voltage)
+        t.Branch("time", time)
+
+        voltage.clear()
+        time.clear()
+        for v in self.data:
+            voltage.push_back(v)
+        for tval in self.time:
+            time.push_back(tval)
+
+        t.Fill()
+        f.Write()
+        f.Close()
 
 
 def main(fname):
