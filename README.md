@@ -1,7 +1,7 @@
-# Software for Tektronix Oscilloscope (Updated Feb 2025)
+# Software for Tektronix Oscilloscope (Updated Oct 2025)
 
 **Feb 2025:** Updated to read `.wfm` files from the **5 Series B MSO Mixed Signal Oscilloscope**.
-
+**Oct 2025** Add option for fastframe parser and converter to ROOT in python and c++ (not working in c++, fuck ChatGPT)
 ## Files
 ### `wfmread.py`: Read binary `wfm003` files for data analysis
 - has the option to write to an `.npz` file
@@ -32,3 +32,5 @@ $ python
 ## Credits
 - Partially based on MATLAB code [`wfm_ascii_dpo.m`](https://www.mathworks.com/matlabcentral/fileexchange/14918-tektronix-wfm-file-reader) by Randy White (2007).
 - [Tektronix Waveform File Format Manual 077-0220-11](https://download.tek.com/manual/Waveform-File-Format-Manual-077022011.pdf)
+- Original code from [Morgan Askins](https://github.com/MorganAskins/tektronix_wfmreader)
+- Updated version from [AquaDragon](https://github.com/AquaDragon/tektronix_wfm_reader)
