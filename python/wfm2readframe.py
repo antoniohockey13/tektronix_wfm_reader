@@ -357,7 +357,7 @@ def wfm2readframe(filename, frame, datapoints=None, step=1, startind=1):
         itemsize = np_dtype.itemsize
         n_items = len(data_bytes) // itemsize
         if n_items <= 0:
-            raise WfmReadError("No hay datos disponibles para leer (n_items<=0).")
+            return np.array([]), np.array([]), info, np.array([]), np.array([])
         arr = np.frombuffer(data_bytes[:n_items * itemsize], dtype=np_dtype)
 
         # ahora seleccionar los valores: arr[0 : nop*step : step]
