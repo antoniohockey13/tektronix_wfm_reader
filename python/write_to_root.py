@@ -82,10 +82,15 @@ def main(input_folder, output_folder, channel):
 	time_vec = ROOT.std.vector('double')()
 	voltage_vec = ROOT.std.vector('double')()
 	event_number = array('i', [0])
+	min_voltage = array('f', [0.0])
+	min_time = array('f', [0.0])
+	
 
 	tree.Branch("event_number", event_number, "event_number/I")
 	tree.Branch("time", time_vec)
 	tree.Branch("voltage", voltage_vec)
+	tree.Branch("min_voltage", min_voltage, "min_voltage/F")
+	tree.Branch("min_time", min_time, "min_time/F")
 
 	global_event_counter = 0
 	pattern = re.compile(rf'cycle_(\d+)_ch{channel}.wfm$')
@@ -112,6 +117,8 @@ def main(input_folder, output_folder, channel):
 				time_vec.push_back(float(t))
 				voltage_vec.push_back(float(v))
 
+			min_voltage[0] = float(np.min(waveform))
+			min_time[0] = float(time[np.argmin(waveform)])
 			event_number[0] = int(global_event_counter)
 			tree.Fill()
 			print(f"Event number = {global_event_counter}")
