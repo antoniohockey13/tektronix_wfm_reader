@@ -122,7 +122,9 @@ def main(input_folder, output_folder, channel, condor):
                 time_vec.clear()
                 time_vec.insert(time_vec.end(), tmpt.begin(), tmpt.end())
                 tree_metadata.Fill()
-
+            if len(waveform) == 0:
+                global_event_counter += 1
+                continue
             tmpv = ROOT.std.vector('double')(waveform.astype(np.float64).tolist())
             voltage_vec.clear()
             voltage_vec.insert(voltage_vec.end(), tmpv.begin(), tmpv.end())
