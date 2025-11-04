@@ -124,7 +124,7 @@ def main(input_folder, output_folder, channel, condor):
                     time_vec.reserve(n)
                 except Exception:
                     pass
-                time_vec = ROOT.ROOT.NumpyToVector(time_axis.astype(np.float64))
+                time_vec = ROOT.VecOps.RVec('double')(time_axis.astype(np.float64))
                 tree_metadata.Fill()
 
 
@@ -140,7 +140,7 @@ def main(input_folder, output_folder, channel, condor):
                 pass
 
             # push data into vectors
-            voltage_vec = ROOT.ROOT.NumpyToVector(waveform.astype(np.float64))
+            voltage_vec = ROOT.VecOps.RVec('double')(waveform.astype(np.float64))
 
             event_number[0] = int(global_event_counter)
             min_voltage[0] = float(np.min(waveform))
