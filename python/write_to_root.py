@@ -35,7 +35,8 @@ def iter_waveforms(input_file):
 @click.option('-i', 'input_folder', required=True, help="Folder containing .wfm files")
 @click.option('-o', 'output_folder', type=click.Path(), default=".", help="Output folder for ROOT file")
 @click.option('-c', 'channel', type=int, default=1, help="Channel number to process")
-def main(input_folder, output_folder, channel):
+@click.option('--local', is_flag=True, help="Run in local mode, show progress bar")
+def main(input_folder, output_folder, channel, local):
     """
     Stream WFM frames from files and write them as entries in a ROOT TTree.
     Each TTree entry contains:
@@ -46,13 +47,24 @@ def main(input_folder, output_folder, channel):
     print(f"Input folder: {input_folder}")
     print(f"Output folder: {output_folder}")
     print(f"Processing channel: {channel}")
+    is_local = local
+    print(f"Local mode: {is_local}")
     input_folder = os.fspath(input_folder)
     output_folder = os.fspath(output_folder)
     os.makedirs(output_folder, exist_ok=True)
 
     out_path = os.path.join(output_folder, f"more_waveforms_ch{channel}.root")
     root_file = ROOT.TFile(out_path, "RECREATE")
-    tree = ROOT.TTree("waveforms", "Waveform Data")
+    tree_waveforms = ROOT.TTree("waveforms", "Waveform Data")
+    tree_metadata = ROOT.TTree("metadata", "Metadata")
+    if not is_local:
+        # Split the file in smaller ones of 10GB
+        tree_waveforms.SetMaxTreeSize(10*1024**3)
+        tree_waveforms.SetAutoFlush(500_000_000)
+        root_file.SetCompressionLevel(1)
+        # Remove tqdm for non-local mode
+        tqdm.tqdm = lambda x: x
+
 
     # C-compatible 32-bit int for scalar branch
     event_number = array('i', [0])
@@ -61,12 +73,15 @@ def main(input_folder, output_folder, channel):
     min_voltage = array('f', [0.0])
     min_time = array('f', [0.0])
 
-
-    tree.Branch("event_number", event_number, "event_number/I")
-    tree.Branch("time", time_vec)
-    tree.Branch("voltage", voltage_vec)
-    tree.Branch("min_voltage", min_voltage, "min_voltage/F")
-    tree.Branch("min_time", min_time, "min_time/F")
+    tree_waveforms.Branch("event_number", event_number, "event_number/I")
+    
+    tree_waveforms.Branch("voltage", voltage_vec)
+    tree_waveforms.Branch("min_voltage", min_voltage, "min_voltage/F")
+    tree_waveforms.Branch("min_time", min_time, "min_time/F")
+    
+    tree_metadata.Branch("channel", array('i', [channel]), "channel/I")
+    tree_waveforms.Branch("time", time_vec)
+    tree_metadata.Branch("run_number", array('i', [0]), "run_number/I")
 
     pattern = re.compile(rf'cycle_(\d+)_ch{channel}\.wfm$')  # escaped .wfm
     files = sorted(os.listdir(input_folder))
@@ -83,7 +98,18 @@ def main(input_folder, output_folder, channel):
         # Stream frames from the file to avoid allocating large arrays
         for time_axis, waveform in tqdm.tqdm(iter_waveforms(input_file)):
             # prepare vectors; clear previous contents
-            time_vec.clear()
+            if global_event_counter == 0:
+                # Fill the time vector only once (assumed constant across events)
+                time_vec.clear()
+                n = len(time_axis)
+                try:
+                    time_vec.reserve(n)
+                except Exception:
+                    pass
+                time_vec = ROOT.ROOT.NumpyToVector(time_axis.astype(np.float64))
+                tree_metadata.Fill()
+                
+
             voltage_vec.clear()
 
             n = len(time_axis)
@@ -91,23 +117,17 @@ def main(input_folder, output_folder, channel):
                 continue
             # try to reserve capacity (not all PyROOT builds expose reserve; guard with try/except)
             try:
-                time_vec.reserve(n)
                 voltage_vec.reserve(n)
             except Exception:
                 pass
 
             # push data into vectors
-            # using local variables for speed
-            tv = time_vec
-            vv = voltage_vec
-            for t, v in zip(time_axis, waveform):
-                tv.push_back(float(t))
-                vv.push_back(float(v))
+            voltage_vec = ROOT.ROOT.NumpyToVector(waveform.astype(np.float64))
 
             event_number[0] = int(global_event_counter)
             min_voltage[0] = float(np.min(waveform))
             min_time[0] = float(time_axis[np.argmin(waveform)])
-            tree.Fill()
+            tree_waveforms.Fill()
             global_event_counter += 1
 
         # small progress info per file (keeps stdout readable)

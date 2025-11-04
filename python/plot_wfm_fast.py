@@ -60,10 +60,11 @@ def main(input_file):
 
 	for ch in range(1, 5):
 		print(f"Channel {ch} data shape: {Osci_Data[f'ch{ch}'].shape}")
-		# Draw waveform for first event as example
+		# Draw waveform for one event as example
+		event = 1
 		plt.figure()
-		plt.plot(time, Osci_Data[f'ch{ch}'][265, :])
-		plt.title(f'Channel {ch} - Event 1')
+		plt.plot(time, Osci_Data[f'ch{ch}'][event, :])
+		plt.title(f'Channel {ch} - Event {event}')
 		plt.xlabel('Time (s)')
 		plt.ylabel('Amplitude (V)')
 		plt.grid()

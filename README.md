@@ -8,7 +8,7 @@
 - `wfm2readframe.py`: Base class that reads the wfm file
 - `plot_wfm_fast.py`: Useful for a fast check, uses matplotlib to plot some data from the waveforms.
 - `write_to_root.py`: Takes the `*.wfm` files and and convert the waveforms into a `.root` file. It stores the number of event as integer, the voltage as float vector, the time as a float vector, the minimum voltage as a float at the time at which this minimum voltage happened as a float.
-
+- `save_to_corry.py`: Uses Matias senger signals package ((link)[https://github.com/SengerM/signals/tree/main]) to obtain meaningful information from the raw waveforms and save it to a txt file so it is possible to use it within (Corryvreckan framework)[https://gitlab.cern.ch/corryvreckan/corryvreckan]. 
 ## Usage
 ### plot_wfm_fast.py
 
