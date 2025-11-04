@@ -38,17 +38,35 @@ def iter_waveforms(input_file):
 @click.option('--local', is_flag=True, help="Run in local mode, show progress bar")
 def main(input_folder, output_folder, channel, local):
     """
-    Stream WFM frames from files and write them as entries in a ROOT TTree.
-    Each TTree entry contains:
-        - event_number: int
-        - time: std::vector<double>
-        - voltage: std::vector<double>
+    Stream WFM frames from files and write them as entries in 2 ROOT TTree.
+
+    The output ROOT file contains two TTrees:
+    1) "waveforms": contains the waveform data. Each entry has:
+       - event_number: integer event index
+       - voltage: vector of voltage samples
+       - min_voltage: minimum voltage in the waveform
+       - min_time: time at which minimum voltage occurs
+    2) "metadata": contains metadata such as channel number and run number and time axis
+    Parameters:
+    - input_folder: folder containing .wfm files
+    - output_folder: folder to store the output ROOT file
+    - channel: channel number to process
+    - local: if set, run in local mode with progress bar
+
     """
     print(f"Input folder: {input_folder}")
     print(f"Output folder: {output_folder}")
     print(f"Processing channel: {channel}")
     is_local = local
     print(f"Local mode: {is_local}")
+    run_number = None  # Placeholder for run number extraction if needed
+    # Extract run number from input folder name if possible
+    match = re.search(r'run_(\d+)', input_folder)
+    if match:
+        run_number = int(match.group(1))
+        print(f"Detected run number: {run_number}")
+    else:
+        print("No run number detected in input folder name.")
     input_folder = os.fspath(input_folder)
     output_folder = os.fspath(output_folder)
     os.makedirs(output_folder, exist_ok=True)
@@ -108,7 +126,7 @@ def main(input_folder, output_folder, channel, local):
                     pass
                 time_vec = ROOT.ROOT.NumpyToVector(time_axis.astype(np.float64))
                 tree_metadata.Fill()
-                
+
 
             voltage_vec.clear()
 
