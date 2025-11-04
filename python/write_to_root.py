@@ -86,8 +86,8 @@ def main(input_folder, output_folder, channel, condor):
 
     # C-compatible 32-bit int for scalar branch
     event_number = array('i', [0])
-    time_vec = ROOT.std.vector('double')()
-    voltage_vec = ROOT.std.vector('double')()
+    time_vec = ROOT.VecOps.RVec('double')()
+    voltage_vec = ROOT.VecOps.RVec('double')()
     min_voltage = array('f', [0.0])
     min_time = array('f', [0.0])
 
@@ -117,30 +117,15 @@ def main(input_folder, output_folder, channel, condor):
         for time_axis, waveform in tqdm.tqdm(iter_waveforms(input_file)):
             # prepare vectors; clear previous contents
             if global_event_counter == 0:
+                tmpt = ROOT.std.vector('double')(time_axis.astype(np.float64).tolist())
                 # Fill the time vector only once (assumed constant across events)
                 time_vec.clear()
-                n = len(time_axis)
-                try:
-                    time_vec.reserve(n)
-                except Exception:
-                    pass
-                time_vec = ROOT.VecOps.RVec('double')(time_axis.astype(np.float64))
+                time_vec.insert(time_vec.end(), tmpt.begin(), tmpt.end())
                 tree_metadata.Fill()
 
-
+            tmpv = ROOT.std.vector('double')(waveform.astype(np.float64).tolist())
             voltage_vec.clear()
-
-            n = len(time_axis)
-            if n == 0:
-                continue
-            # try to reserve capacity (not all PyROOT builds expose reserve; guard with try/except)
-            try:
-                voltage_vec.reserve(n)
-            except Exception:
-                pass
-
-            # push data into vectors
-            voltage_vec = ROOT.VecOps.RVec('double')(waveform.astype(np.float64))
+            voltage_vec.insert(voltage_vec.end(), tmpv.begin(), tmpv.end())
 
             event_number[0] = int(global_event_counter)
             min_voltage[0] = float(np.min(waveform))
