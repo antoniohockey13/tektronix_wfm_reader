@@ -35,8 +35,8 @@ def iter_waveforms(input_file):
 @click.option('-i', 'input_folder', required=True, help="Folder containing .wfm files")
 @click.option('-o', 'output_folder', type=click.Path(), default=".", help="Output folder for ROOT file")
 @click.option('-c', 'channel', type=int, default=1, help="Channel number to process")
-@click.option('--local', is_flag=True, help="Run in local mode, show progress bar")
-def main(input_folder, output_folder, channel, local):
+@click.option('--condor', is_flag=True, help="Run in local mode, show progress bar")
+def main(input_folder, output_folder, channel, condor):
     """
     Stream WFM frames from files and write them as entries in 2 ROOT TTree.
 
@@ -57,8 +57,8 @@ def main(input_folder, output_folder, channel, local):
     print(f"Input folder: {input_folder}")
     print(f"Output folder: {output_folder}")
     print(f"Processing channel: {channel}")
-    is_local = local
-    print(f"Local mode: {is_local}")
+    is_condor = condor
+    print(f"Condor mode: {is_condor}")
     run_number = None  # Placeholder for run number extraction if needed
     # Extract run number from input folder name if possible
     match = re.search(r'run_(\d+)', input_folder)
@@ -75,7 +75,7 @@ def main(input_folder, output_folder, channel, local):
     root_file = ROOT.TFile(out_path, "RECREATE")
     tree_waveforms = ROOT.TTree("waveforms", "Waveform Data")
     tree_metadata = ROOT.TTree("metadata", "Metadata")
-    if not is_local:
+    if is_condor:
         # Split the file in smaller ones of 10GB
         tree_waveforms.SetMaxTreeSize(10*1024**3)
         tree_waveforms.SetAutoFlush(500_000_000)
