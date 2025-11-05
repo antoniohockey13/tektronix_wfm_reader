@@ -35,7 +35,7 @@ def iter_waveforms(input_file):
 @click.option('-i', 'input_folder', required=True, help="Folder containing .wfm files")
 @click.option('-o', 'output_folder', type=click.Path(), default=".", help="Output folder for ROOT file")
 @click.option('-c', 'channel', type=int, default=1, help="Channel number to process")
-@click.option('--condor', is_flag=True, help="Run in local mode, show progress bar")
+@click.option('--condor', is_flag=True, help="Run in batch mode, do not show progress bar")
 def main(input_folder, output_folder, channel, condor):
     """
     Stream WFM frames from files and write them as entries in 2 ROOT TTree.
@@ -51,7 +51,7 @@ def main(input_folder, output_folder, channel, condor):
     - input_folder: folder containing .wfm files
     - output_folder: folder to store the output ROOT file
     - channel: channel number to process
-    - local: if set, run in local mode with progress bar
+    - condor: if set, run in batch mode without progress bar
 
     """
     print(f"Input folder: {input_folder}")
@@ -76,12 +76,12 @@ def main(input_folder, output_folder, channel, condor):
     tree_waveforms = ROOT.TTree("waveforms", "Waveform Data")
     tree_metadata = ROOT.TTree("metadata", "Metadata")
     if is_condor:
-        # Split the file in smaller ones of 10GB
-        tree_waveforms.SetMaxTreeSize(10*1024**3)
-        tree_waveforms.SetAutoFlush(500_000_000)
-        root_file.SetCompressionLevel(1)
         # Remove tqdm for non-local mode
         tqdm.tqdm = lambda x: x
+    # Split the file in smaller ones of 10GB
+    tree_waveforms.SetMaxTreeSize(10*1024**3)
+    tree_waveforms.SetAutoFlush(500_000_000)
+    root_file.SetCompressionLevel(1)
 
 
     # C-compatible 32-bit int for scalar branch
@@ -92,13 +92,12 @@ def main(input_folder, output_folder, channel, condor):
     min_time = array('f', [0.0])
 
     tree_waveforms.Branch("event_number", event_number, "event_number/I")
-    
     tree_waveforms.Branch("voltage", voltage_vec)
     tree_waveforms.Branch("min_voltage", min_voltage, "min_voltage/F")
     tree_waveforms.Branch("min_time", min_time, "min_time/F")
     
     tree_metadata.Branch("channel", array('i', [channel]), "channel/I")
-    tree_waveforms.Branch("time", time_vec)
+    tree_metadata.Branch("time", time_vec)
     tree_metadata.Branch("run_number", array('i', [0]), "run_number/I")
 
     pattern = re.compile(rf'cycle_(\d+)_ch{channel}\.wfm$')  # escaped .wfm
