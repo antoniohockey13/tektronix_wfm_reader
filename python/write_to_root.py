@@ -54,6 +54,7 @@ def main(input_folder, output_folder, channel, condor):
     - condor: if set, run in batch mode without progress bar
 
     """
+    channel = int(channel)
     print(f"Input folder: {input_folder}")
     print(f"Output folder: {output_folder}")
     print(f"Processing channel: {channel}")
@@ -95,10 +96,12 @@ def main(input_folder, output_folder, channel, condor):
     tree_waveforms.Branch("voltage", voltage_vec)
     tree_waveforms.Branch("min_voltage", min_voltage, "min_voltage/F")
     tree_waveforms.Branch("min_time", min_time, "min_time/F")
-    
-    tree_metadata.Branch("channel", array('i', [channel]), "channel/I")
+
+    channel_vec = array('i', [channel])
+    run_number_vec = array('i', [run_number])
+    tree_metadata.Branch("channel", channel_vec, "channel/I")
     tree_metadata.Branch("time", time_vec)
-    tree_metadata.Branch("run_number", array('i', [0]), "run_number/I")
+    tree_metadata.Branch("run_number", run_number_vec, "run_number/I")
 
     pattern = re.compile(rf'cycle_(\d+)_ch{channel}\.wfm$')  # escaped .wfm
     files = sorted(os.listdir(input_folder))
